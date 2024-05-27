@@ -1,0 +1,15 @@
+{
+  "domain": "windmill_AC",
+  "name": "Windmill AC",
+  "codeowners": [
+    "@bzellman"
+  ],
+  "config_flow": true,
+  "integration_type": "device",
+  "domains": ["climate"],
+  "documentation": "https://github.com/bzellman/HACS-WindmillAC",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/bzellman/HACS-WindmillAC",
+  "requirements": ["requests", "blynklib"],
+  "version": "0.0.1"
+}
