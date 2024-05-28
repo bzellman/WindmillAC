@@ -17,7 +17,7 @@ class WindmillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="Windmill AC", data=user_input)
+            return self.async_create_entry(title="Windmill AC: Device Token", data=user_input)
 
         schema = vol.Schema({
             vol.Required(CONF_TOKEN): str,
@@ -37,7 +37,7 @@ class WindmillOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="Windmill AC: Device Token", data=user_input)
 
         schema = vol.Schema({
             vol.Required(CONF_TOKEN, default=self.config_entry.data.get(CONF_TOKEN)): str,
