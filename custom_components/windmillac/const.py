@@ -3,8 +3,8 @@ from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
 
-NAME = "Windmill AC"
-DOMAIN = "windmill_AC"
+NAME = "WindmillAC"
+DOMAIN = "windmillac"
 VERSION = "1.0.0"
 PLATFORMS = ["climate"]
 UPDATE_INTERVAL = 60
