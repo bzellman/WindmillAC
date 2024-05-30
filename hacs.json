@@ -1,8 +1,5 @@
 {
     "name": "Windmill AC",
-    "filename": "hacs_windmill.zip",
-    "hide_default_branch": true,
     "homeassistant": "2024.4.0",
-    "render_readme": true,
-    "zip_release": true
+    "render_readme": true
 }
