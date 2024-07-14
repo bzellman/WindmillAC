@@ -1,7 +1,6 @@
 import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import homeassistant
 
 from .const import DOMAIN, PLATFORMS, CONF_TOKEN, BASE_URL
 from .blynk_service import BlynkService
@@ -9,7 +8,7 @@ from .coordinator import WindmillDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: homeassistant.core.HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Windmill AC from a config entry."""
     _LOGGER.debug("Setting up Windmill AC config entry")
 
@@ -32,7 +31,7 @@ async def async_setup_entry(hass: homeassistant.core.HomeAssistant, entry: Confi
 
     return True
 
-async def async_unload_entry(hass: homeassistant.core.HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
