@@ -20,7 +20,7 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
         self.entity_description = entity_description
         self._attr_name = "Windmill Climate"
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-        self._attr_unique_id = f"{DOMAIN}_{entity_description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.blynk_service.token}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name= "Windmill AC",
@@ -44,7 +44,7 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
     @property
     def unique_id(self):
         """Return a unique ID for the entity."""
-        return f"{DOMAIN}_{self.entity_description.key}"
+        return f"{DOMAIN}_{self.coordinator.blynk_service.token}_{self.entity_description.key}"
 
     @property
     def name(self):
