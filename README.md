@@ -98,5 +98,9 @@ This might occur if something wasn't right the first time you added the device. 
 This is a community-maintained integration (v1). The developer welcomes community support, feedback, and contributions. For issues or feature requests, please use the [GitHub Issues](https://github.com/bzellman/WindmillAC/issues) page.
 
 ## Disclaimer
+## Notes / Changelog
+
+2024-09: Replaced deprecated Home Assistant call `async_forward_entry_setups` with the recommended `async_setup_platforms` in `__init__.py` (see HA June 2024 dev blog).
+
 
 I do my best to maintain this integration but offer no guarantee or warranty for your hardware, software, or devices. The integration may break if Windmill changes their API or technology stack.
