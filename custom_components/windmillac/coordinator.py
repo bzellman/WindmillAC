@@ -30,6 +30,8 @@ class WindmillDataUpdateCoordinator(DataUpdateCoordinator):
                 "mode": await self.blynk_service.async_get_mode(),
                 "fan": await self.blynk_service.async_get_fan(),
                 "power": await self.blynk_service.async_get_power(),
+                "power_consumption": await self.blynk_service.async_get_power_consumption(),
+                "energy": await self.blynk_service.async_get_energy(),
             }
             _LOGGER.debug(f"Data fetched from Windmill AC: {data}")
             return data

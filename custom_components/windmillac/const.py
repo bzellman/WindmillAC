@@ -5,8 +5,8 @@ LOGGER: Logger = getLogger(__package__)
 
 NAME = "WindmillAC"
 DOMAIN = "windmillac"
-VERSION = "1.0.6"
-PLATFORMS = ["climate"]
+VERSION = "1.1.0"
+PLATFORMS = ["climate", "sensor"]
 UPDATE_INTERVAL = 60
 CONF_TOKEN = "token"
 BASE_URL = "https://dashboard.windmillair.com"

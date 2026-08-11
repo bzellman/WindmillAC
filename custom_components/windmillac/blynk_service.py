@@ -51,8 +51,12 @@ class BlynkService:
                     elif response.text.isalpha():
                         return response.text.strip()
                     else:
-                        return response.json()[0]
-                except (ValueError, IndexError) as e:
+                        try:
+                            # Handles decimal values like power (W) and energy (kWh) pins
+                            return float(response.text)
+                        except ValueError:
+                            return response.json()[0]
+                except (ValueError, IndexError, TypeError) as e:
                     raise Exception(f"Failed to parse response for {pin}: {e}")
             else:
                 raise Exception(f"Failed to get pin value for {pin}")
@@ -126,6 +130,24 @@ class BlynkService:
         else:
             return HVACMode.OFF
 
+
+    async def async_get_power_consumption(self):
+        """Get the current instantaneous power draw, in Watts."""
+        pin_value = await self.async_get_pin_value('V15')
+        _LOGGER.debug(f"Pin value received for power consumption: {pin_value} (type: {type(pin_value)})")
+        try:
+            return float(pin_value)
+        except (TypeError, ValueError):
+            return None
+
+    async def async_get_energy(self):
+        """Get the cumulative energy consumption, in kWh."""
+        pin_value = await self.async_get_pin_value('V16')
+        _LOGGER.debug(f"Pin value received for energy: {pin_value} (type: {type(pin_value)})")
+        try:
+            return float(pin_value)
+        except (TypeError, ValueError):
+            return None
 
     async def async_get_fan(self):
         pin_value = await self.async_get_pin_value('V4')

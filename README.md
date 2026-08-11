@@ -100,6 +100,8 @@ This is a community-maintained integration (v1). The developer welcomes communit
 ## Disclaimer
 ## Notes / Changelog
 
+2026-08: Added `sensor` entities for **Power Consumption** (W) and **Energy** (kWh), so power draw and cumulative usage now show up in Home Assistant (resolves [#30](https://github.com/bzellman/WindmillAC/issues/30)) and can feed the Energy dashboard/long-term statistics ([#41](https://github.com/bzellman/WindmillAC/issues/41)).
+
 2024-09: Replaced deprecated Home Assistant call `async_forward_entry_setups` with the recommended `async_setup_platforms` in `__init__.py` (see HA June 2024 dev blog).
 
 
