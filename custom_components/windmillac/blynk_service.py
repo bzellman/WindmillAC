@@ -2,6 +2,7 @@ import logging
 import requests
 from urllib.parse import urlencode
 from homeassistant.components.climate.const import HVACMode, ClimateEntityFeature
+from .const import PIN_POWER_CONSUMPTION, PIN_ENERGY
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -56,7 +57,7 @@ class BlynkService:
                             return float(response.text)
                         except ValueError:
                             return response.json()[0]
-                except (ValueError, IndexError, TypeError) as e:
+                except (ValueError, IndexError, TypeError, KeyError) as e:
                     raise Exception(f"Failed to parse response for {pin}: {e}")
             else:
                 raise Exception(f"Failed to get pin value for {pin}")
@@ -131,23 +132,31 @@ class BlynkService:
             return HVACMode.OFF
 
 
-    async def async_get_power_consumption(self):
-        """Get the current instantaneous power draw, in Watts."""
-        pin_value = await self.async_get_pin_value('V15')
-        _LOGGER.debug(f"Pin value received for power consumption: {pin_value} (type: {type(pin_value)})")
+    async def _async_get_float_pin(self, pin, label):
+        """Fetch a pin and coerce it to float.
+
+        Returns None (instead of raising) if the pin doesn't exist on this
+        device/firmware, the request fails, or the value isn't numeric —
+        callers treat this pin as optional/best-effort telemetry.
+        """
+        try:
+            pin_value = await self.async_get_pin_value(pin)
+        except Exception as err:
+            _LOGGER.warning(f"Pin {pin} ({label}) is unavailable: {err}")
+            return None
+        _LOGGER.debug(f"Pin value received for {label}: {pin_value} (type: {type(pin_value)})")
         try:
             return float(pin_value)
         except (TypeError, ValueError):
             return None
 
+    async def async_get_power_consumption(self):
+        """Get the current instantaneous power draw, in Watts."""
+        return await self._async_get_float_pin(PIN_POWER_CONSUMPTION, "power consumption")
+
     async def async_get_energy(self):
         """Get the cumulative energy consumption, in kWh."""
-        pin_value = await self.async_get_pin_value('V16')
-        _LOGGER.debug(f"Pin value received for energy: {pin_value} (type: {type(pin_value)})")
-        try:
-            return float(pin_value)
-        except (TypeError, ValueError):
-            return None
+        return await self._async_get_float_pin(PIN_ENERGY, "energy")
 
     async def async_get_fan(self):
         pin_value = await self.async_get_pin_value('V4')
