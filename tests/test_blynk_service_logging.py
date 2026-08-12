@@ -9,14 +9,23 @@ from pathlib import Path
 
 MODULE = "custom_components.windmillac.blynk_service"
 PARENT = "custom_components.windmillac"
-SOURCE = Path(__file__).resolve().parents[1] / "custom_components/windmillac/blynk_service.py"
+SOURCE = (
+    Path(__file__).resolve().parents[1]
+    / "custom_components/windmillac/blynk_service.py"
+)
 TOKEN = "BLYNK_TOKEN_SENTINEL"
 RESPONSE_SECRET = "REFLECTED_RESPONSE_SECRET"
 MISSING = object()
 MODULE_KEYS = (
-    MODULE, "requests", "homeassistant", "homeassistant.components",
-    "homeassistant.components.climate", "homeassistant.components.climate.const",
+    MODULE,
+    "requests",
+    "homeassistant",
+    "homeassistant.components",
+    "homeassistant.components.climate",
+    "homeassistant.components.climate.const",
 )
+
+
 class Capture(logging.Handler):
     def __init__(self):
         super().__init__()
@@ -24,17 +33,24 @@ class Capture(logging.Handler):
 
     def emit(self, record):
         self.records.append(record)
+
+
 class Hass:
     async def async_add_executor_job(self, callback, *args):
         return callback(*args)
+
+
 class BlynkServiceLoggingTests(unittest.TestCase):
     def setUp(self):
-        self.parent, self.child = logging.getLogger(PARENT), logging.getLogger(MODULE)
+        self.parent = logging.getLogger(PARENT)
+        self.child = logging.getLogger(MODULE)
         self.logger_state = {
             logger: (logger.level, logger.disabled, logger.propagate, list(logger.handlers))
             for logger in (self.parent, self.child)
         }
-        self.module_state = {name: sys.modules.get(name, MISSING) for name in MODULE_KEYS}
+        self.module_state = {
+            name: sys.modules.get(name, MISSING) for name in MODULE_KEYS
+        }
         self.addCleanup(self._restore)
         self.capture = Capture()
         self.parent.addHandler(self.capture)
@@ -51,7 +67,9 @@ class BlynkServiceLoggingTests(unittest.TestCase):
                 sys.modules[name] = original
         for logger, (level, disabled, propagate, handlers) in self.logger_state.items():
             logger.setLevel(level)
-            logger.disabled, logger.propagate, logger.handlers[:] = disabled, propagate, handlers
+            logger.disabled = disabled
+            logger.propagate = propagate
+            logger.handlers[:] = handlers
 
     def _install_import_doubles(self):
         requests = types.ModuleType("requests")
@@ -68,17 +86,25 @@ class BlynkServiceLoggingTests(unittest.TestCase):
                 "homeassistant.components.climate", "homeassistant.components.climate.const",
             )
         )
-        homeassistant.__path__ = components.__path__ = climate.__path__ = []
+        homeassistant.__path__ = []
+        components.__path__ = []
+        climate.__path__ = []
         const.HVACMode = types.SimpleNamespace(
             AUTO="auto", COOL="cool", FAN_ONLY="fan_only", OFF="off"
         )
         const.ClimateEntityFeature = object()
-        homeassistant.components, components.climate, climate.const = components, climate, const
-        sys.modules.update({
-            "requests": requests, "homeassistant": homeassistant,
-            "homeassistant.components": components, "homeassistant.components.climate": climate,
-            "homeassistant.components.climate.const": const,
-        })
+        homeassistant.components = components
+        components.climate = climate
+        climate.const = const
+        sys.modules.update(
+            {
+                "requests": requests,
+                "homeassistant": homeassistant,
+                "homeassistant.components": components,
+                "homeassistant.components.climate": climate,
+                "homeassistant.components.climate.const": const,
+            }
+        )
         return requests
 
     def _load(self, parent_level):
@@ -98,7 +124,11 @@ class BlynkServiceLoggingTests(unittest.TestCase):
         )
 
     def _messages(self):
-        return [record.getMessage() for record in self.capture.records if record.name == MODULE]
+        return [
+            record.getMessage()
+            for record in self.capture.records
+            if record.name == MODULE
+        ]
 
     def test_module_logger_inherits_parent_warning_and_suppresses_debug(self):
         service = self._service(logging.WARNING)
@@ -115,35 +145,53 @@ class BlynkServiceLoggingTests(unittest.TestCase):
 
         def fake_get(url):
             urls.append(url)
-            return types.SimpleNamespace(status_code=200, text="1" if url.endswith("&V1") else set_response)
+            text = "1" if url.endswith("&V1") else set_response
+            return types.SimpleNamespace(status_code=200, text=text)
 
         self.requests.get = fake_get
         self.assertEqual(asyncio.run(service.async_get_pin_value("V1")), 1)
-        self.assertEqual(asyncio.run(service.async_set_pin_value("V2", "72")), set_response.strip())
-        self.assertEqual(urls, [
-            f"https://dashboard.windmillair.com/external/api/get?token={TOKEN}&V1",
-            f"https://dashboard.windmillair.com/external/api/update?token={TOKEN}&V2=72",
-        ])
+        self.assertEqual(
+            asyncio.run(service.async_set_pin_value("V2", "72")),
+            set_response.strip(),
+        )
+        self.assertEqual(
+            urls,
+            [
+                f"https://dashboard.windmillair.com/external/api/get?token={TOKEN}&V1",
+                f"https://dashboard.windmillair.com/external/api/update?token={TOKEN}&V2=72",
+            ],
+        )
         messages = self._messages()
         self.assertTrue(messages, "Expected safe Blynk debug diagnostics at parent DEBUG")
         self.assertTrue(any("Response Status Code: 200" in message for message in messages))
-        unsafe = [message for message in messages if TOKEN in message or RESPONSE_SECRET in message]
-        self.assertEqual(unsafe, [], "Blynk diagnostics must exclude constructed request URLs and raw response data")
+        unsafe = [
+            message
+            for message in messages
+            if TOKEN in message or RESPONSE_SECRET in message
+        ]
+        self.assertEqual(
+            unsafe,
+            [],
+            "Blynk diagnostics must exclude request URLs and raw response data",
+        )
 
     def test_request_exception_is_token_safe_and_suppresses_raw_context(self):
         service = self._service(logging.WARNING)
+
         def fail(url):
             raise self.requests.exceptions.RequestException(f"transport failed for {url}")
+
         self.requests.get = fail
-        for operation, args, message in (
+        for operation, args, expected_message in (
             (service.async_get_pin_value, ("V1",), "Failed to get pin value for V1"),
             (service.async_set_pin_value, ("V2", "72"), "Failed to set pin value for V2"),
         ):
-            with self.assertRaises(Exception) as raised:
-                asyncio.run(operation(*args))
-            error = raised.exception
-            self.assertEqual(str(error), message)
-            self.assertIsNone(error.__cause__)
-            self.assertTrue(error.__suppress_context__)
-            self.assertNotIn(TOKEN, "".join(traceback.format_exception(error)))
+            with self.subTest(expected_message=expected_message):
+                with self.assertRaises(Exception) as raised:
+                    asyncio.run(operation(*args))
+                error = raised.exception
+                self.assertEqual(str(error), expected_message)
+                self.assertIsNone(error.__cause__)
+                self.assertTrue(error.__suppress_context__)
+                self.assertNotIn(TOKEN, "".join(traceback.format_exception(error)))
         self.assertFalse(any(TOKEN in message for message in self._messages()))

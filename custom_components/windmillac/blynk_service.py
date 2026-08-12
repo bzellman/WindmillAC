@@ -5,6 +5,7 @@ from homeassistant.components.climate.const import HVACMode, ClimateEntityFeatur
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class BlynkService:
     def __init__(self, hass, server, token):
         self.hass = hass
