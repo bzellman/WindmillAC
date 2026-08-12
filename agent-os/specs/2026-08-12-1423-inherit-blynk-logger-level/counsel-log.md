@@ -1,8 +1,8 @@
 # Fix Strategy Counsel — Respect Home Assistant Logger Configuration
 
-**Bug Report**: https://github.com/bzellman/WindmillAC/issues/42  
-**Fix Plan**: `agent-os/specs/2026-08-12-1423-inherit-blynk-logger-level/fix-plan.md`  
-**Date**: 2026-08-12 14:23 CDT  
+**Bug Report**: https://github.com/bzellman/WindmillAC/issues/42
+**Fix Plan**: `agent-os/specs/2026-08-12-1423-inherit-blynk-logger-level/fix-plan.md`
+**Date**: 2026-08-12 14:23 CDT
 **Iteration**: 1 of 2 (max)
 
 ---

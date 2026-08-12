@@ -36,7 +36,11 @@ class Capture(logging.Handler):
 
 
 class Hass:
+    def __init__(self):
+        self.executor_calls = []
+
     async def async_add_executor_job(self, callback, *args):
+        self.executor_calls.append((callback, args))
         return callback(*args)
 
 
@@ -53,6 +57,7 @@ class BlynkServiceLoggingTests(unittest.TestCase):
         }
         self.addCleanup(self._restore)
         self.capture = Capture()
+        self.hass = Hass()
         self.parent.addHandler(self.capture)
         self.parent.disabled, self.parent.propagate = False, False
         self.child.setLevel(logging.NOTSET)
@@ -120,7 +125,7 @@ class BlynkServiceLoggingTests(unittest.TestCase):
 
     def _service(self, parent_level):
         return self._load(parent_level).BlynkService(
-            Hass(), "https://dashboard.windmillair.com", TOKEN
+            self.hass, "https://dashboard.windmillair.com", TOKEN
         )
 
     def _messages(self):
@@ -137,6 +142,7 @@ class BlynkServiceLoggingTests(unittest.TestCase):
         self.assertEqual(self.child.getEffectiveLevel(), logging.WARNING)
         self.assertFalse(self.child.isEnabledFor(logging.DEBUG))
         self.assertEqual(asyncio.run(service.async_get_pin_value("V1")), 1)
+        self.assertEqual(len(self.hass.executor_calls), 1)
         self.assertEqual(self._messages(), [])
 
     def test_pin_operations_preserve_requests_without_logging_secrets(self):
@@ -161,6 +167,7 @@ class BlynkServiceLoggingTests(unittest.TestCase):
                 f"https://dashboard.windmillair.com/external/api/update?token={TOKEN}&V2=72",
             ],
         )
+        self.assertEqual(len(self.hass.executor_calls), 2)
         messages = self._messages()
         self.assertTrue(messages, "Expected safe Blynk debug diagnostics at parent DEBUG")
         self.assertTrue(any("Response Status Code: 200" in message for message in messages))
@@ -194,4 +201,5 @@ class BlynkServiceLoggingTests(unittest.TestCase):
                 self.assertIsNone(error.__cause__)
                 self.assertTrue(error.__suppress_context__)
                 self.assertNotIn(TOKEN, "".join(traceback.format_exception(error)))
+        self.assertEqual(len(self.hass.executor_calls), 2)
         self.assertFalse(any(TOKEN in message for message in self._messages()))

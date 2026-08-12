@@ -1,7 +1,7 @@
 # Fix Plan — Respect Home Assistant Logger Configuration
 
-**Bug Report**: https://github.com/bzellman/WindmillAC/issues/42  
-**Root Cause**: `blynk_service.py` assigns `DEBUG` directly to its module logger at import time, so the Blynk child logger does not inherit Home Assistant's configured integration level. The same request path logs token-bearing URLs and republishes raw transport details that can contain the URL.  
+**Bug Report**: https://github.com/bzellman/WindmillAC/issues/42
+**Root Cause**: `blynk_service.py` assigns `DEBUG` directly to its module logger at import time, so the Blynk child logger does not inherit Home Assistant's configured integration level. The same request path logs token-bearing URLs and republishes raw transport details that can contain the URL.
 **Confidence**: High
 
 ## Root Cause Analysis
