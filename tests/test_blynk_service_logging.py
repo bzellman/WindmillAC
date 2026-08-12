@@ -132,16 +132,18 @@ class BlynkServiceLoggingTests(unittest.TestCase):
 
     def test_request_exception_is_token_safe_and_suppresses_raw_context(self):
         service = self._service(logging.WARNING)
-
         def fail(url):
             raise self.requests.exceptions.RequestException(f"transport failed for {url}")
-
         self.requests.get = fail
-        with self.assertRaises(Exception) as raised:
-            asyncio.run(service.async_get_pin_value("V1"))
-        error = raised.exception
-        self.assertEqual(str(error), "Failed to get pin value for V1")
-        self.assertIsNone(error.__cause__)
-        self.assertTrue(error.__suppress_context__)
-        self.assertNotIn(TOKEN, "".join(traceback.format_exception(error)))
+        for operation, args, message in (
+            (service.async_get_pin_value, ("V1",), "Failed to get pin value for V1"),
+            (service.async_set_pin_value, ("V2", "72"), "Failed to set pin value for V2"),
+        ):
+            with self.assertRaises(Exception) as raised:
+                asyncio.run(operation(*args))
+            error = raised.exception
+            self.assertEqual(str(error), message)
+            self.assertIsNone(error.__cause__)
+            self.assertTrue(error.__suppress_context__)
+            self.assertNotIn(TOKEN, "".join(traceback.format_exception(error)))
         self.assertFalse(any(TOKEN in message for message in self._messages()))
