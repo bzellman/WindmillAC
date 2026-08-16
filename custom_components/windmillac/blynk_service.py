@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from homeassistant.components.climate.const import HVACMode, ClimateEntityFeature
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+
 
 class BlynkService:
     def __init__(self, hass, server, token):
@@ -36,15 +36,15 @@ class BlynkService:
         _LOGGER.debug(f"Getting pin value for pin {pin}")
         params = {'token': self.token}
         url = self._get_request_url(f'external/api/get', params) + f"&{pin}"
-        _LOGGER.debug(f"Request URL: {url}")
 
         def fetch():
-            response = requests.get(url)
+            try:
+                response = requests.get(url)
+            except requests.exceptions.RequestException:
+                raise Exception(f"Failed to get pin value for {pin}") from None
             _LOGGER.debug(f"Response Status Code: {response.status_code}")
-            _LOGGER.debug(f"Response Text: {response.text}")
 
             if response.status_code == 200:
-                _LOGGER.debug(f"Response RAW: {response}")
                 try:
                     if response.text.isdigit():
                         return int(response.text)
@@ -63,12 +63,13 @@ class BlynkService:
         _LOGGER.debug(f"Setting pin value for pin {pin} to {value}")
         params = {'token': self.token, pin: value}
         url = self._get_request_url(f'external/api/update', params)
-        _LOGGER.debug(f"Request URL: {url}")
 
         def fetch():
-            response = requests.get(url)
+            try:
+                response = requests.get(url)
+            except requests.exceptions.RequestException:
+                raise Exception(f"Failed to set pin value for {pin}") from None
             _LOGGER.debug(f"Response Status Code: {response.status_code}")
-            _LOGGER.debug(f"Response Text: {response.text}")
 
             if response.status_code == 200:
                 return response.text.strip()

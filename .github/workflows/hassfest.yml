@@ -1,5 +1,8 @@
 name: Validate with hassfest
 
+permissions:
+  contents: read
+
 on:
   push:
   pull_request:
@@ -10,5 +13,11 @@ jobs:
   validate:
     runs-on: "ubuntu-latest"
     steps:
-        - uses: "actions/checkout@v4"
-        - uses: "home-assistant/actions/hassfest@master"
+      - uses: "actions/checkout@11d5960a326750d5838078e36cf38b85af677262"
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Run dependency-free unit tests
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+      - uses: "home-assistant/actions/hassfest@a7c616ce81ccda50150bf1595786c71b1883fabb"
