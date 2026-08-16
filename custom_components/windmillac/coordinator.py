@@ -31,8 +31,27 @@ class WindmillDataUpdateCoordinator(DataUpdateCoordinator):
                 "fan": await self.blynk_service.async_get_fan(),
                 "power": await self.blynk_service.async_get_power(),
             }
-            _LOGGER.debug(f"Data fetched from Windmill AC: {data}")
-            return data
         except Exception as err:
             _LOGGER.error(f"Error fetching data: {err}")
             raise UpdateFailed(f"Error fetching data: {err}")
+
+        # Power/energy are optional telemetry pins that aren't confirmed to
+        # exist on every device/firmware. BlynkService already returns None
+        # for them instead of raising, but fetch them outside the block
+        # above and guard again here anyway: a failure here must only make
+        # those two sensors unavailable, never take down the climate entity
+        # or block setup.
+        try:
+            data["power_consumption"] = await self.blynk_service.async_get_power_consumption()
+        except Exception as err:
+            _LOGGER.warning(f"Error fetching power consumption: {err}")
+            data["power_consumption"] = None
+
+        try:
+            data["energy"] = await self.blynk_service.async_get_energy()
+        except Exception as err:
+            _LOGGER.warning(f"Error fetching energy: {err}")
+            data["energy"] = None
+
+        _LOGGER.debug(f"Data fetched from Windmill AC: {data}")
+        return data

@@ -1,7 +1,8 @@
 import logging
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import HVACMode, ClimateEntityFeature
-from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfTemperature, UnitOfPower, UnitOfEnergy, ATTR_TEMPERATURE
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -9,6 +10,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
+
+
+def _windmill_ac_device_info(coordinator) -> DeviceInfo:
+    """Build the shared DeviceInfo so all entities for this AC group under one device."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{DOMAIN}_{coordinator.blynk_service.token}_windmill_AC")},
+        name="Windmill AC",
+        manufacturer="Windmill"
+    )
 
 
 class WindmillClimate(CoordinatorEntity, ClimateEntity):
@@ -21,11 +31,7 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
         self._attr_name = "Windmill Climate"
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         self._attr_unique_id = f"{DOMAIN}_{coordinator.blynk_service.token}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name= "Windmill AC",
-            manufacturer="Windmill"
-        )
+        self._attr_device_info = _windmill_ac_device_info(coordinator)
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE |
             ClimateEntityFeature.FAN_MODE |
@@ -127,3 +133,43 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
         _LOGGER.debug(f"Updated HVAC mode: {self._attr_hvac_mode}")
         _LOGGER.debug(f"Updated fan mode: {self._attr_fan_mode}")
         _LOGGER.debug(f"Updated power state: {self._attr_is_on}")
+
+
+class WindmillPowerSensor(CoordinatorEntity, SensorEntity):
+    """Representation of the Windmill AC's instantaneous power draw."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator, entity_description):
+        """Initialize the power sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.blynk_service.token}_{entity_description.key}"
+        self._attr_device_info = _windmill_ac_device_info(coordinator)
+
+    @property
+    def native_value(self):
+        """Return the current power draw, in Watts."""
+        return self.coordinator.data.get("power_consumption")
+
+
+class WindmillEnergySensor(CoordinatorEntity, SensorEntity):
+    """Representation of the Windmill AC's cumulative energy consumption."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, coordinator, entity_description):
+        """Initialize the energy sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{DOMAIN}_{coordinator.blynk_service.token}_{entity_description.key}"
+        self._attr_device_info = _windmill_ac_device_info(coordinator)
+
+    @property
+    def native_value(self):
+        """Return the cumulative energy consumption, in kWh."""
+        return self.coordinator.data.get("energy")
