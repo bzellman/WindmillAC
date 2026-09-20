@@ -11,7 +11,7 @@ class WindmillDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, blynk_service):
         """Initialize."""
-        _LOGGER.debug("2Starting data from Windmill AC")
+        _LOGGER.debug("Initializing Windmill AC coordinator")
         self.blynk_service = blynk_service
         super().__init__(
             hass,
