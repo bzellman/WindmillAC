@@ -8,7 +8,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 class WindmillClimate(CoordinatorEntity, ClimateEntity):
@@ -54,7 +53,6 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        _LOGGER.debug("current_temperature property called")
         return self.coordinator.data.get("current_temp")
 
     @property
@@ -65,9 +63,6 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation mode."""
-        _LOGGER.debug("hvac_mode property called")
-        mode = self.coordinator.data.get("mode")
-        _LOGGER.debug(f"mode {mode}")
         return self.coordinator.data.get("mode")
 
     @property
@@ -112,18 +107,3 @@ class WindmillClimate(CoordinatorEntity, ClimateEntity):
         await self.coordinator.blynk_service.async_set_power(False)
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
-
-    async def async_update(self):
-        """Update the climate entity."""
-        _LOGGER.debug("Executing async_update in WindmillClimate")
-        await super().async_update()
-        self._attr_target_temperature = self.coordinator.data.get("target_temp")
-        self._attr_current_temperature = self.coordinator.data.get("current_temp")
-        self._attr_hvac_mode = self.coordinator.data.get("mode")
-        self._attr_fan_mode = self.coordinator.data.get("fan")
-        self._attr_is_on = self.coordinator.data.get("power")
-        _LOGGER.debug(f"Updated target temperature: {self._attr_target_temperature}")
-        _LOGGER.debug(f"Updated current temperature: {self._attr_current_temperature}")
-        _LOGGER.debug(f"Updated HVAC mode: {self._attr_hvac_mode}")
-        _LOGGER.debug(f"Updated fan mode: {self._attr_fan_mode}")
-        _LOGGER.debug(f"Updated power state: {self._attr_is_on}")

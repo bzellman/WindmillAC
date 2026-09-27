@@ -10,7 +10,6 @@ from .coordinator import WindmillDataUpdateCoordinator
 from .entity import WindmillClimate
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 ENTITY_DESCRIPTIONS = [
